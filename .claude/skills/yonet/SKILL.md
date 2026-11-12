@@ -1,6 +1,6 @@
 ---
 name: yonet
-description: Büyük, çok adımlı bir işi yönetici gibi böler ve dağıtır. Ağır okuma, video izleme ve araştırmayı Gemini'ye, çok dosyalı kod işini Codex'e, tarayıcı testini TestSprite'a (isteğe bağlı) verir; sonucu denetler, kararı kendisi verir. "yönet", "işi böl", "dağıt", "orkestra", "limitim bitmesin" denince ya da büyük bir iş geldiğinde kullan. claude-orkestra parçası.
+description: Büyük, çok adımlı bir işi yönetici gibi böler ve dağıtır. Ağır okuma, video izleme ve araştırmayı Gemini'ye, çok dosyalı kod işini Codex'e, tarayıcı testini TestSprite'a (isteğe bağlı) verir; Codex ve Gemini yoksa okumayı Haiku, kodu Sonnet alt ajanına verir; sonucu denetler, kararı kendisi verir. "yönet", "işi böl", "dağıt", "orkestra", "limitim bitmesin" denince ya da büyük bir iş geldiğinde kullan. claude-orkestra parçası.
 ---
 
 # Yönet
@@ -20,7 +20,9 @@ sh <skills klasörü>/gemini-devret/devret.sh --kontrol
 command -v testsprite >/dev/null && testsprite auth status >/dev/null 2>&1 && echo "TestSprite hazır"
 ```
 
-Hazır olmayanın işini kendin yaparsın. Hiçbiri yoksa kullanıcıya söyle, README'deki kurulumu öner.
+Codex yoksa kod işi `sonnet-yazici`, Gemini yoksa okuma işi `haiku-okuyucu` alt ajanına gider (`kur.sh`
+ile gelir). İkisi de yoksa sadece Claude modunda çalışırsın: kullanıcıya bir kez söyle, işi yine böl.
+Video izleme Gemini'siz olmaz; gerekirse ffmpeg ile kare alıp kendin bakarsın.
 
 ## 2. Böl
 
@@ -38,6 +40,8 @@ Bölme ölçütü:
   Kod yazdırma.
 - **Codex:** birden fazla dosyaya dokunan düzeltme, yeni özellik, test yazımı, refactor, kod incelemesi.
 - **TestSprite:** gerçek tarayıcıda uçtan uca test (kuruluysa).
+- **Haiku / Sonnet (Codex ya da Gemini yoksa):** okuma, arama, test sonucu getirme `haiku-okuyucu`; çok
+  dosyalı kod `sonnet-yazici`. Çağırırken model seçme, alt ajan dosyasındaki model geçerli.
 - **Sen:** plan, karar, kalite kontrolü, küçük ve tek dosyalık işler, kullanıcıyla konuşma.
 
 İş büyükse ya da geri dönüşü zorsa (silme, yayına alma, çok dosyayı değiştirme) tabloyu gösterip onay al.
@@ -52,7 +56,7 @@ Değilse tabloyu gösterip başla.
 
 ## 4. Denetle
 
-- Codex: `git diff` ve testleri kendin çalıştır.
+- Codex ya da Sonnet: `git diff` ve testleri kendin çalıştır.
 - Gemini: rapordaki en önemli 1-2 iddiayı karede, satırda ya da kaynakta doğrula.
 - Kritik değişiklikte çapraz denetim: Codex'in işini Gemini'ye (`denetle.md`), Gemini'nin bulgusunu
   Codex'e (`kod-incele.md`) baktır. Kodu yazan model kendi hatasını kolay görmez.

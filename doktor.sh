@@ -51,11 +51,16 @@ fi
 if command -v ffmpeg >/dev/null 2>&1; then iyi "ffmpeg (Claude'un videodan kare alıp doğrulaması için)"; else not_ "ffmpeg yok: video işinde Claude kareyi kendisi doğrulayamaz"; fi
 
 echo
-echo "Skill'ler"
+echo "Skill'ler ve alt ajanlar"
 if [ -f "$HOME/.claude/skills/yonet/SKILL.md" ]; then
-  iyi "tüm projelerde kurulu (~/.claude/skills)"
+  iyi "skill'ler tüm projelerde kurulu (~/.claude/skills)"
 else
-  not_ "yalnız bu klasörde hazır. Diğer projeler için: sh kur.sh"
+  not_ "skill'ler yalnız bu klasörde hazır. Diğer projeler için: sh kur.sh"
+fi
+if [ -f "$HOME/.claude/agents/haiku-okuyucu.md" ] && [ -f "$HOME/.claude/agents/sonnet-yazici.md" ]; then
+  iyi "Haiku ve Sonnet alt ajanları tüm projelerde kurulu (~/.claude/agents)"
+else
+  not_ "Haiku ve Sonnet alt ajanları yalnız bu klasörde hazır. Diğer projeler için: sh kur.sh"
 fi
 
 if [ "$canli" = 1 ]; then
@@ -75,10 +80,14 @@ fi
 
 echo
 echo "Hazır:${hazir:- yok}"
-[ -n "$eksik" ] && echo "Eksik:$eksik (hepsi şart değil; eksik olanın işini Claude kendisi yapar)"
-if [ "$claude_var" = 1 ] && { [ "$codex_d" -eq 0 ] || [ "$gemini_d" -eq 0 ]; }; then
-  [ "$canli" = 1 ] || echo "Gerçek bir soruyla denemek için: sh doktor.sh --canli"
-  exit 0
+[ -n "$eksik" ] && echo "Eksik:$eksik (şart değil; eksik olanın işini Haiku ve Sonnet alt ajanları yapar)"
+if [ "$claude_var" = 0 ]; then
+  echo "Claude Code gerekli. Kurulum: README.md"
+  exit 1
 fi
-echo "En az Claude Code ve bir işçi (Codex ya da Gemini) gerekli. Kurulum: README.md"
-exit 1
+if [ "$codex_d" -eq 0 ] || [ "$gemini_d" -eq 0 ]; then
+  [ "$canli" = 1 ] || echo "Gerçek bir soruyla denemek için: sh doktor.sh --canli"
+else
+  echo "Sadece Claude modu: Opus yönetir, okumayı haiku-okuyucu, kodu sonnet-yazici yapar (README: Sadece Claude ile)."
+fi
+exit 0

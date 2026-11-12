@@ -17,6 +17,9 @@ tarayıcıda tekrar tekrar koşturmak. Bu repo o işi zaten ödediğiniz diğer 
 Claude videoyu izlemez, yüz dosyayı okumaz; diğer modelin birkaç satırlık raporunu okur, önemli yeri
 kendisi doğrular, kararı verir. Diğer modellerin harcadığı jeton Claude limitinizden gitmez.
 
+**Yalnız Claude aboneliğiniz mi var?** Aynı düzen Claude'un kendi modelleriyle de çalışır: Opus yönetir,
+okumayı Haiku, kodu Sonnet yapar. Bakın: [Sadece Claude ile](#sadece-claude-ile).
+
 Bu düzeni anlattığım video: [Claude Code Limitin Neden Bitiyor? 2 Aydır Limite Takılmadım](https://youtu.be/x3VBHymfU40)
 
 ## Neler var
@@ -29,7 +32,8 @@ Bu düzeni anlattığım video: [Claude Code Limitin Neden Bitiyor? 2 Aydır Lim
 | `/gemini-devret` | Video izletir, uzun belge okutur, araştırma ya da ikinci göz denetimi yaptırır. Gemini kod yazmaz. |
 | `/test-devret` | İsteğe bağlı: tarayıcı testini TestSprite CLI'a verir. |
 | [`doktor.sh`](doktor.sh) | Araçlar kurulu mu, oturum açık mı, kontrol eder. |
-| [`kur.sh`](kur.sh) | Skill'leri ve kuralları Claude Code'a ekler. |
+| [`.claude/agents/`](.claude/agents/) | Sadece Claude modu: okumayı Haiku, kodu Sonnet alt ajanı yapar. |
+| [`kur.sh`](kur.sh) | Skill'leri, alt ajanları ve kuralları Claude Code'a ekler. |
 | [`ornekler/demo-proje`](ornekler/demo-proje) | Bilerek hatalı küçük bir proje: ilk deneme için. |
 
 Devasa kural dosyaları yazmanız gerekmiyor. Opus işi bölmeyi zaten iyi yapıyor; ona kimin ne yaptığını
@@ -41,12 +45,12 @@ ayarlarla çağırır, uzun çıktıyı dosyada tutup Claude'a yalnız özeti ve
 | Araç | Hesap | Şart mı |
 | --- | --- | --- |
 | [Claude Code](https://claude.com/claude-code) | Claude aboneliği | Evet, yönetici bu |
-| [Codex CLI](https://github.com/openai/codex) | ChatGPT hesabı | Codex ya da Gemini, en az biri |
-| [Antigravity CLI](https://antigravity.google) (`agy`, Gemini) | Google hesabı | Codex ya da Gemini, en az biri |
+| [Codex CLI](https://github.com/openai/codex) | ChatGPT hesabı | Hayır; yoksa kodu Sonnet yazar |
+| [Antigravity CLI](https://antigravity.google) (`agy`, Gemini) | Google hesabı | Hayır; yoksa okumayı Haiku yapar |
 | [TestSprite CLI](https://www.testsprite.com/?via=ugur-2611a) | TestSprite hesabı | Hayır, test için |
 
 Hepsini almak zorunda değilsiniz. Elinizde hangi abonelik varsa onu çalıştırın; kurulu olmayan aracın
-işini Claude kendisi yapar. Ayrıca `git` (değişikliği denetlemek için), `node` ya da `python3` gerekir;
+işini Claude'un Haiku ve Sonnet alt ajanları yapar. Ayrıca `git` (değişikliği denetlemek için), `node` ya da `python3` gerekir;
 video işinde `ffmpeg` de işe yarar. Geliştirme ve denemeler macOS'ta yapıldı. Betikler düz POSIX `sh`;
 Linux'ta ve Windows'ta (Claude Code'un kullandığı Git Bash ile) çalışması beklenir ama ayrıca denenmedi.
 
@@ -82,6 +86,7 @@ Claude Code'a:
 Claude işi böler, düzeltmeyi Codex'e verir, testleri kendisi çalıştırır, Codex'in değişikliğini Gemini'ye
 denetletir. Demoda testlerin kapsamadığı bir kural da var (indirim kodu büyük/küçük harfe duyarsız olmalı):
 Codex onu da düzeltti mi, düzeltmediyse Gemini yakaladı mı, ona bakın. İkinci göz tam bu iş için.
+Codex ve Gemini yoksa aynı komutla düzeltmeyi `sonnet-yazici`, okumayı `haiku-okuyucu` yapar.
 
 ### 3. Kendi işinizde kullanın
 
@@ -93,6 +98,34 @@ Elle istemek isterseniz:
 /codex-devret ödeme akışındaki yuvarlama hatasını düzeltsin, testleri geçirsin
 /yonet rakip 5 oyunun mağaza sayfalarını araştır, ekonomi tablosu çıkar, bizim oyuna uygula
 ```
+
+## Sadece Claude ile
+
+Codex ya da Gemini aboneliğiniz yoksa da aynı mantık çalışır. Limiti asıl yiyen şey Opus'un her işi
+kendisinin yapması: yüz dosyayı Opus okuyunca, testi Opus koşturunca emeği en pahalı model harcıyor. Bu
+düzende Opus yine yönetir, emeği Claude'un hafif modelleri yapar:
+
+| İş | Kim |
+| --- | --- |
+| Plan, karar, diff'e bakmak, son kontrol | Opus (ana oturum) |
+| Çok dosya okumak, kodda arama, log özetlemek, testi çalıştırıp sonucu getirmek | [`haiku-okuyucu`](.claude/agents/haiku-okuyucu.md) (Haiku) |
+| Çok dosyalı kod düzeltmesi, yeni özellik, test yazımı | [`sonnet-yazici`](.claude/agents/sonnet-yazici.md) (Sonnet) |
+
+Kurulum aynı: repoyu Claude Code'a verip "bu sistemi kur" yazın ya da `sh kur.sh` çalıştırın. Betik iki alt
+ajanı `~/.claude/agents/` klasörüne (tek projede `.claude/agents/`) koyar. Alt ajanın modeli dosyasında
+yazılı (`model: haiku`, `model: sonnet`), Opus'un her seferinde hatırlaması gerekmez. Yönetici kuralları
+da Codex ve Gemini yoksa işi bu iki ajana vermesini söyler; çoğu zaman siz bir şey yazmadan dağıtır.
+Elle istemek isterseniz:
+
+```text
+haiku-okuyucu ile ödeme hesaplanan yerleri bul, dosya ve satırıyla getir
+sonnet-yazici ile sepet testlerini geçir, sonra diff'i sen kontrol et
+```
+
+Daha da basit bir yol: `/model opusplan`. Plan kipinde Opus düşünür, uygulamada kodu Sonnet yazar.
+
+Haiku ve Sonnet de aynı Claude limitinden yer, ama Opus'tan daha az. Bedava değil; fark, emek işinin en
+pahalı modelde yapılmaması. Kalite kararı yine Opus'ta: Sonnet'in yazdığı diff'e ve test sonucuna Opus bakar.
 
 ## Elle kurulum
 
@@ -134,8 +167,8 @@ aboneliğinize göre değişir.
 git clone https://github.com/UgurKeskekci/claude-orkestra
 cd claude-orkestra
 sh doktor.sh            # neyin hazır olduğunu gösterir, kota harcamaz
-sh kur.sh               # tüm projeler: ~/.claude/skills ve ~/.claude/CLAUDE.md
-sh doktor.sh --canli    # Codex ve Gemini'ye birer küçük soru (az kota)
+sh kur.sh               # tüm projeler: ~/.claude/skills, ~/.claude/agents ve ~/.claude/CLAUDE.md
+sh doktor.sh --canli    # Codex ve Gemini'ye birer küçük soru (az kota, kuruluysa)
 ```
 
 Yalnız bir projeye kurmak için `sh kur.sh ~/projem`. Geri almak için `sh kur.sh --kaldir` (ya da
@@ -171,7 +204,8 @@ sh .claude/skills/gemini-devret/devret.sh --ekle ~/Videolar brif.md
 - **Kodu yazan model kendi hatasını kolay görmez.** Kritik işte öbür modele denetletin: Codex yazar,
   Gemini bakar ya da tersi.
 - **Döngüye girmeyin.** Aynı iş için en fazla iki düzelt-denetle turu. Sonra Claude kendisi karar verir.
-- **Claude'un kendi alt ajanı bu iş için çözüm değil.** Alt ajan da aynı limitten yer.
+- **Opus'la alt ajan açmak çözüm değil.** Alt ajan da aynı limitten, aynı fiyata yer. Codex ya da Gemini
+  yoksa alt ajanı Haiku ya da Sonnet ile açın ([Sadece Claude ile](#sadece-claude-ile)).
 - **Küçük işi devretmeyin.** Tek dosyada iki satırlık düzeltme için brif yazmak işten uzun sürer.
 
 ## Test işi: TestSprite (isteğe bağlı)
@@ -200,6 +234,7 @@ yanıt döner. TestSprite kullanmak şart değil; kurulu değilse Claude bu adı
 
 | Sorun | Çözüm |
 | --- | --- |
+| Codex de Gemini de yok | Sorun değil: `sh kur.sh` Haiku ve Sonnet alt ajanlarını kurar, işi onlar yapar |
 | `Codex CLI bulunamadı` | `npm install -g @openai/codex` ya da `CODEX_BIN=/yol/codex` |
 | `Codex kurulu ama oturum kapalı` | Terminalde `codex login` |
 | `agy kurulu ama model listesi gelmedi` | Terminalde bir kez `agy` yazıp Google girişini tamamlayın |
@@ -213,7 +248,9 @@ yanıt döner. TestSprite kullanmak şart değil; kurulu değilse Claude bu adı
 CLAUDE.md                              bu klasörde Claude'un okuduğu kurallar
 yonetici-kurallari.md                  CLAUDE.md'nize eklenecek blok
 doktor.sh                              kurulum ve oturum kontrolü
-kur.sh                                 skill ve kural kurulumu, --kaldir
+kur.sh                                 skill, alt ajan ve kural kurulumu, --kaldir
+.claude/agents/haiku-okuyucu.md        sadece Claude modu: okuma işçisi (Haiku)
+.claude/agents/sonnet-yazici.md        sadece Claude modu: kod işçisi (Sonnet)
 .claude/skills/yonet/                  işi böl, dağıt, denetle
 .claude/skills/codex-devret/           devret.sh + brifler/
 .claude/skills/gemini-devret/          devret.sh + brifler/
